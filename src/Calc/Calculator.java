@@ -10,18 +10,29 @@ import javax.swing.JButton;
  */
 public final class Calculator extends javax.swing.JFrame {
 
+ private static Calculator instance = null;//SINGELTON
+
     private String currentOperand;
     private String previousOperand;
     private String operation;
 
     private int x, y;
 
-    public Calculator() {
+    private Calculator() { //SINGELTON
         initComponents();
         getContentPane().setSize(400, 700);
         this.clear();
         this.addEvents();
     }
+
+
+    public static Calculator getInstance() {//SINGELTON
+        if (instance == null) {
+            instance = new Calculator();
+        }
+        return instance;
+    }
+
 
     public void addEvents() {
         JButton[] btns = {
