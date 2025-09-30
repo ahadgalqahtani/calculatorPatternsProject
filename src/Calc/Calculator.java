@@ -4,7 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-// --- OPERATION  ---
+// --- OPERATION ---
 
 interface Operation {
     float compute(float a, float b);
@@ -49,33 +49,6 @@ class OperationFactory {
             case "÷" -> new DivideOperation();
             default -> null;
         };
-    }
-}
-
-// --- BUTTON FACTORY ---
-
-interface Button{
-    JButton createButton(String text);
-}
-
-class ButtonFactory implements Button{
-
-    private Color bgColor;
-
-    public ButtonFactory(Color bgColor) {
-        this.bgColor = bgColor;
-    }
-
-    @Override
-    public JButton createButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setBackground(bgColor);
-        btn.setFont(new Font("Century Gothic", Font.BOLD, 18));
-        btn.setForeground(Color.WHITE);
-        btn.setBorder(BorderFactory.createLineBorder(new Color(41, 39, 44)));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setFocusPainted(false);
-        return btn;
     }
 }
 
@@ -223,7 +196,6 @@ public final class Calculator extends JFrame {
         if (currentOperand.equals("") || previousOperand.equals(""))
             return;
 
-            
         float curr = Float.parseFloat(currentOperand);
         float prev = Float.parseFloat(previousOperand);
 
@@ -247,7 +219,19 @@ public final class Calculator extends JFrame {
         previous.setText(previousOperand + " " + operation);
     }
 
-    // --- GUI SETUP USING BUTTON FACTORY ---
+    // --- HELPER METHOD for creating buttons with common properties ---
+    private JButton createButton(String text, Color bgColor) {
+        JButton btn = new JButton(text);
+        btn.setBackground(bgColor);
+        btn.setFont(new Font("Century Gothic", Font.BOLD, 18));
+        btn.setForeground(Color.WHITE);
+        btn.setBorder(BorderFactory.createLineBorder(new Color(41, 39, 44)));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setFocusPainted(false);
+        return btn;
+    }
+
+    // --- GUI SETUP (Reverted button creation) ---
     private void setupGUI() {
 
         // --- FRAME ---
@@ -337,34 +321,34 @@ public final class Calculator extends JFrame {
         buttonsPanel.setBackground(new Color(21, 20, 22));
         buttonsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Button factories
-        Button operatorFactory = new ButtonFactory(new Color(41, 39, 44));
-        Button numberFactory = new ButtonFactory(new Color(21, 20, 22));
+        // Colors for buttons
+        Color operatorColor = new Color(41, 39, 44);
+        Color numberColor = new Color(21, 20, 22);
 
-        // Create buttons
-        btnDel = operatorFactory.createButton("←");
-        btnClear = operatorFactory.createButton("C");
-        btnDiv = operatorFactory.createButton("÷");
-        btnMult = operatorFactory.createButton("×");
+        // Create buttons using the helper method
+        btnDel = createButton("←", operatorColor);
+        btnClear = createButton("C", operatorColor);
+        btnDiv = createButton("÷", operatorColor);
+        btnMult = createButton("×", operatorColor);
 
-        btn7 = numberFactory.createButton("7");
-        btn8 = numberFactory.createButton("8");
-        btn9 = numberFactory.createButton("9");
-        btnSub = operatorFactory.createButton("-");
+        btn7 = createButton("7", numberColor);
+        btn8 = createButton("8", numberColor);
+        btn9 = createButton("9", numberColor);
+        btnSub = createButton("-", operatorColor);
 
-        btn4 = numberFactory.createButton("4");
-        btn5 = numberFactory.createButton("5");
-        btn6 = numberFactory.createButton("6");
-        btnPlus = operatorFactory.createButton("+");
+        btn4 = createButton("4", numberColor);
+        btn5 = createButton("5", numberColor);
+        btn6 = createButton("6", numberColor);
+        btnPlus = createButton("+", operatorColor);
 
-        btn1 = numberFactory.createButton("1");
-        btn2 = numberFactory.createButton("2");
-        btn3 = numberFactory.createButton("3");
-        btnPlusSub = numberFactory.createButton("+/-");
+        btn1 = createButton("1", numberColor);
+        btn2 = createButton("2", numberColor);
+        btn3 = createButton("3", numberColor);
+        btnPlusSub = createButton("+/-", numberColor);
 
-        btn0 = numberFactory.createButton("0");
-        btnDot = numberFactory.createButton(".");
-        btnEqual = operatorFactory.createButton("=");
+        btn0 = createButton("0", numberColor);
+        btnDot = createButton(".", numberColor);
+        btnEqual = createButton("=", operatorColor);
 
         // Add buttons to panel
         buttonsPanel.add(btnDel);
