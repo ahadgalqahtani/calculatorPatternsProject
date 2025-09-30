@@ -54,15 +54,15 @@ class OperationFactory {
 
 // --- BUTTON FACTORY ---
 
-interface ButtonFactory {
+interface Button{
     JButton createButton(String text);
 }
 
-class CalculatorButtonFactory implements ButtonFactory {
+class ButtonFactory implements Button{
 
     private Color bgColor;
 
-    public CalculatorButtonFactory(Color bgColor) {
+    public ButtonFactory(Color bgColor) {
         this.bgColor = bgColor;
     }
 
@@ -338,8 +338,8 @@ public final class Calculator extends JFrame {
         buttonsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Button factories
-        ButtonFactory operatorFactory = new CalculatorButtonFactory(new Color(41, 39, 44));
-        ButtonFactory numberFactory = new CalculatorButtonFactory(new Color(21, 20, 22));
+        Button operatorFactory = new ButtonFactory(new Color(41, 39, 44));
+        Button numberFactory = new ButtonFactory(new Color(21, 20, 22));
 
         // Create buttons
         btnDel = operatorFactory.createButton("←");
