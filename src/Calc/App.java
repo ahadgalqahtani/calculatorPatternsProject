@@ -1,5 +1,7 @@
 package Calc;
 
+// import javax.swing.SwingUtilities;
+
 /**
  *
  * @author youcefhmd
@@ -8,7 +10,10 @@ package Calc;
 public class App {
 
     public static void main(String[] args) {
-        Calculator.getInstance().setVisible(true);
+
+        CalculatorGUI calculator = CalculatorGUI.getInstance();
+
+        calculator.setVisible(true);
     }
 
 }
