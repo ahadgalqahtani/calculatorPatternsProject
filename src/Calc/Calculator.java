@@ -3,88 +3,13 @@ package Calc;
 import java.awt.Color;
 import java.awt.event.*;
 import javax.swing.*;
+import java.awt.GridLayout;
+import java.awt.BorderLayout;
+import java.awt.Font;
 
-// --- OPERATION  ---
+public final class Calculator extends javax.swing.JFrame {
 
-interface Operation {
-    float compute(float a, float b);
-}
-
-class AddOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a + b;
-    }
-}
-
-class SubtractOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a - b;
-    }
-}
-
-class MultiplyOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a * b;
-    }
-}
-
-class DivideOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        if (b == 0)
-            throw new ArithmeticException("Division by zero");
-        return a / b;
-    }
-}
-
-class OperationFactory {
-    public static Operation getOperation(String op) {
-        return switch (op) {
-            case "+" -> new AddOperation();
-            case "-" -> new SubtractOperation();
-            case "×" -> new MultiplyOperation();
-            case "÷" -> new DivideOperation();
-            default -> null;
-        };
-    }
-}
-
-// --- BUTTON FACTORY ---
-
-interface Button{
-    JButton createButton(String text);
-}
-
-class ButtonFactory implements Button{
-
-    private Color bgColor;
-
-    public ButtonFactory(Color bgColor) {
-        this.bgColor = bgColor;
-    }
-
-    @Override
-    public JButton createButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setBackground(bgColor);
-        btn.setFont(new Font("Century Gothic", Font.BOLD, 18));
-        btn.setForeground(Color.WHITE);
-        btn.setBorder(BorderFactory.createLineBorder(new Color(41, 39, 44)));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setFocusPainted(false);
-        return btn;
-    }
-}
-
-// --- CALCULATOR CLASS ---
-
-public final class Calculator extends JFrame {
-
-    private static Calculator instance = null; // Singleton
-
+    // CORE LOGIC FIELDS
     private String currentOperand;
     private String previousOperand;
     private String operation;
@@ -92,32 +17,15 @@ public final class Calculator extends JFrame {
     // GUI DRAGGING FIELDS
     private int x, y;
 
-    // Buttons
-    private JButton btnDel, btnClear, btnDiv, btnMult, btn7, btn8, btn9, btnSub,
-            btn4, btn5, btn6, btnPlus, btn1, btn2, btn3, btnPlusSub,
-            btn0, btnDot, btnEqual;
-
-    // Title bar
-    private JPanel titleBar;
-    private JLabel title;
-    private JButton btnMini, btnClose;
-
-    // --- CONSTRUCTOR (Singleton) ---
-    private Calculator() {
-        setupGUI();
-        getContentPane().setSize(320, 530);
+    // CONSTRUCTOR (Calls setupGUI() instead of initComponents())
+    public Calculator() {
+        setupGUI(); // <--- REPLACED initComponents()
+        getContentPane().setSize(320, 530); // Set size based on your layout
         this.clear();
         this.addEvents();
     }
 
-    public static Calculator getInstance() {
-        if (instance == null) {
-            instance = new Calculator();
-        }
-        return instance;
-    }
-
-    // --- CORE LOGIC ---
+        // --- CORE LOGIC METHODS (UNCHANGED) ---
 
     public void addEvents() {
         // Now using instance variables (btn0, btn1, etc.)
