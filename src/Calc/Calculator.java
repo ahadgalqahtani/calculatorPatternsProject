@@ -1,115 +1,65 @@
 package Calc;
 
-import java.awt.*;
+import java.awt.Color;
 import java.awt.event.*;
 import javax.swing.*;
+import java.awt.GridLayout;
+import java.awt.BorderLayout;
+import java.awt.Font;
 
-// --- OPERATION ---
+public final class Calculator extends javax.swing.JFrame {
 
-interface Operation {
-    float compute(float a, float b);
-}
+    private static Calculator instance = null; // SINGELTON
 
-class AddOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a + b;
-    }
-}
-
-class SubtractOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a - b;
-    }
-}
-
-class MultiplyOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a * b;
-    }
-}
-
-class DivideOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        if (b == 0)
-            throw new ArithmeticException("Division by zero");
-        return a / b;
-    }
-}
-
-class OperationFactory {
-    public static Operation getOperation(String op) {
-        return switch (op) {
-            case "+" -> new AddOperation();
-            case "-" -> new SubtractOperation();
-            case "×" -> new MultiplyOperation();
-            case "÷" -> new DivideOperation();
-            default -> null;
-        };
-    }
-}
-
-// --- CALCULATOR CLASS ---
-
-public final class Calculator extends JFrame {
-
-    private static Calculator instance = null; // Singleton
-
+    // CORE LOGIC FIELDS
     private String currentOperand;
     private String previousOperand;
     private String operation;
+    
+    // GUI DRAGGING FIELDS
+    private int x, y;
 
-    private int x, y; // for dragging
-
-    // GUI COMPONENTS
-    private JPanel app;
-    private JPanel resultsPanel;
-    private JTextField previous;
-    private JTextField current;
-    private JPanel buttonsPanel;
-
-    // Buttons
-    private JButton btnDel, btnClear, btnDiv, btnMult, btn7, btn8, btn9, btnSub,
-            btn4, btn5, btn6, btnPlus, btn1, btn2, btn3, btnPlusSub,
-            btn0, btnDot, btnEqual;
-
-    // Title bar
-    private JPanel titleBar;
-    private JLabel title;
-    private JButton btnMini, btnClose;
-
-    // --- CONSTRUCTOR (Singleton) ---
-    private Calculator() {
-        setupGUI();
-        getContentPane().setSize(320, 530);
+    // CONSTRUCTOR (Calls setupGUI() instead of initComponents())
+    private Calculator() { //SINGELTON
+        setupGUI(); // <--- REPLACED initComponents()
+        getContentPane().setSize(320, 530); // Set size based on your layout
         this.clear();
         this.addEvents();
     }
 
-    public static Calculator getInstance() {
+
+    public static Calculator getInstance() {//SINGELTON
         if (instance == null) {
             instance = new Calculator();
         }
         return instance;
     }
 
-    // --- CORE LOGIC ---
+        // --- CORE LOGIC METHODS (UNCHANGED) ---
 
     public void addEvents() {
-        JButton[] btns = { btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9,
-                btnDiv, btnDot, btnEqual, btnDel, btnMult, btnPlus, btnPlusSub, btnSub, btnClear };
+        // Now using instance variables (btn0, btn1, etc.)
+        JButton[] btns = {
+            btn0, btn1, btn2, btn3, btn4,
+            btn5, btn6, btn7, btn8, btn9,
+            btnDiv, btnDot, btnEqual, btnDel,
+            btnMult, btnPlus, btnPlusSub, btnSub, btnClear
+        };
 
-        JButton[] numbers = { btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9 };
+        JButton[] numbers = {
+            btn0, btn1, btn2, btn3, btn4,
+            btn5, btn6, btn7, btn8, btn9
+        };
 
         for (JButton number : numbers) {
-            number.addActionListener(e -> appendNumber(((JButton) e.getSource()).getText()));
+            number.addActionListener((ActionEvent e) -> {
+                appendNumber(((JButton) e.getSource()).getText());
+            });
         }
 
         for (JButton btn : btns) {
             btn.addMouseListener(new MouseAdapter() {
+
                 @Override
                 public void mouseEntered(MouseEvent e) {
                     ((JButton) e.getSource()).setBackground(new Color(73, 69, 78));
@@ -118,8 +68,7 @@ public final class Calculator extends JFrame {
                 @Override
                 public void mouseExited(MouseEvent e) {
                     Object b = e.getSource();
-                    if (b == btnDiv || b == btnEqual || b == btnDel || b == btnMult || b == btnSub || b == btnPlus
-                            || b == btnClear) {
+                    if (b == btnDiv || b == btnEqual || b == btnDel || b == btnMult || b == btnSub || b == btnPlus || b == btnClear) {
                         ((JButton) b).setBackground(new Color(41, 39, 44));
                     } else {
                         ((JButton) b).setBackground(new Color(21, 20, 22));
@@ -127,29 +76,47 @@ public final class Calculator extends JFrame {
                 }
             });
         }
+        
+        // Add Action Listeners for all functional buttons
+        btnDot.addActionListener((ActionEvent evt) -> {
+            appendNumber((currentOperand.isBlank() ? "0." : "."));
+        });
 
-        btnDot.addActionListener(e -> appendNumber((currentOperand.isBlank() ? "0." : ".")));
-        btnClear.addActionListener(e -> clear());
-        btnDel.addActionListener(e -> {
+        btnClear.addActionListener((ActionEvent evt) -> {
+            clear();
+        });
+
+        btnDel.addActionListener((ActionEvent evt) -> {
             if (!currentOperand.equals("")) {
                 currentOperand = currentOperand.substring(0, currentOperand.length() - 1);
                 updateDisplay();
             }
         });
 
-        btnPlus.addActionListener(e -> chooseOperation("+"));
-        btnMult.addActionListener(e -> chooseOperation("×"));
-        btnSub.addActionListener(e -> chooseOperation("-"));
-        btnDiv.addActionListener(e -> chooseOperation("÷"));
+        btnPlus.addActionListener((ActionEvent evt) -> {
+            chooseOperation("+");
+        });
 
-        btnEqual.addActionListener(e -> {
+        btnMult.addActionListener((ActionEvent evt) -> {
+            chooseOperation("×");
+        });
+
+        btnSub.addActionListener((ActionEvent evt) -> {
+            chooseOperation("-");
+        });
+
+        btnDiv.addActionListener((ActionEvent evt) -> {
+            chooseOperation("÷");
+        });
+
+        btnEqual.addActionListener((ActionEvent evt) -> {
             compute();
             updateDisplay();
             if (currentOperand.equals("Error"))
                 currentOperand = "";
         });
 
-        btnPlusSub.addActionListener(e -> {
+        btnPlusSub.addActionListener((ActionEvent evt) -> {
             if (!currentOperand.isBlank()) {
                 float tmp = -Float.parseFloat(currentOperand);
                 currentOperand = (tmp - (int) tmp) != 0 ? Float.toString(tmp) : Integer.toString((int) tmp);
@@ -159,98 +126,114 @@ public final class Calculator extends JFrame {
     }
 
     public void clear() {
-        currentOperand = "";
-        previousOperand = "";
-        operation = "";
-        updateDisplay();
+        this.currentOperand = "";
+        this.previousOperand = "";
+        this.operation = "";
+        this.updateDisplay();
     }
 
     public void appendNumber(String number) {
-        if (currentOperand.equals("0") && number.equals("0"))
-            return;
-        if (number.equals(".") && currentOperand.contains("."))
-            return;
-        if (currentOperand.equals("0") && !number.equals("0") && !number.equals("."))
-            currentOperand = "";
-        currentOperand += number;
-        updateDisplay();
-    }
-
-    public void chooseOperation(String op) {
-        if (currentOperand.equals("") && !previousOperand.equals("")) {
-            operation = op;
-            updateDisplay();
+        if (this.currentOperand.equals("0") && number.equals("0")) {
             return;
         }
-        if (currentOperand.equals(""))
+
+        if (number.equals(".") && this.currentOperand.contains(".")) {
             return;
-        if (!previousOperand.equals(""))
-            compute();
-        operation = op;
-        previousOperand = currentOperand;
-        currentOperand = "";
-        updateDisplay();
+        }
+
+        if (this.currentOperand.equals("0")
+                && !number.equals("0")
+                && !number.equals(".")) {
+            this.currentOperand = "";
+        }
+
+        this.currentOperand += number;
+        this.updateDisplay();
+    }
+
+    public void chooseOperation(String operation) {
+        if (this.currentOperand.equals("") && !this.previousOperand.equals("")) {
+            this.operation = operation;
+            this.updateDisplay();
+        }
+        if (this.currentOperand.equals("")) {
+            return;
+        }
+
+        if (!this.previousOperand.equals("")) {
+            this.compute();
+        }
+
+        this.operation = operation;
+        this.previousOperand = this.currentOperand;
+        this.currentOperand = "";
+        this.updateDisplay();
     }
 
     public void compute() {
-        if (currentOperand.equals("") || previousOperand.equals(""))
+        float computation;
+        if (this.currentOperand.equals("") || this.previousOperand.equals("")) {
             return;
-
-        float curr = Float.parseFloat(currentOperand);
-        float prev = Float.parseFloat(previousOperand);
-
-        Operation op = OperationFactory.getOperation(operation);
-        if (op == null)
-            return;
-
-        try {
-            float result = op.compute(prev, curr);
-            currentOperand = (result - (int) result) != 0 ? Float.toString(result) : Integer.toString((int) result);
-            previousOperand = "";
-            operation = "";
-        } catch (ArithmeticException e) {
-            clear();
-            currentOperand = "Error";
         }
+
+        float curr = Float.parseFloat(this.currentOperand);
+        float prev = Float.parseFloat(this.previousOperand);
+        if (Float.isNaN(curr) || Float.isNaN(prev)) {
+            return;
+        }
+
+        switch (this.operation) {
+            case "+" ->
+                computation = prev + curr;
+            case "-" ->
+                computation = prev - curr;
+            case "×" ->
+                computation = prev * curr;
+            case "÷" -> {
+                if (curr == 0) {
+                    this.clear();
+                    this.currentOperand = "Error";
+                    return;
+                }
+                computation = prev / curr;
+            }
+            default -> {
+                return;
+            }
+        }
+
+        this.currentOperand = (computation - (int) computation) != 0 ? Float.toString(computation) : Integer.toString((int) computation);
+        this.previousOperand = "";
+        this.operation = "";
     }
 
     public void updateDisplay() {
-        current.setText(currentOperand);
-        previous.setText(previousOperand + " " + operation);
+        current.setText(this.currentOperand);
+        previous.setText(previousOperand + " " + this.operation);
     }
 
-    // --- HELPER METHOD for creating buttons with common properties ---
-    private JButton createButton(String text, Color bgColor) {
-        JButton btn = new JButton(text);
-        btn.setBackground(bgColor);
-        btn.setFont(new Font("Century Gothic", Font.BOLD, 18));
-        btn.setForeground(Color.WHITE);
-        btn.setBorder(BorderFactory.createLineBorder(new Color(41, 39, 44)));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setFocusPainted(false);
-        return btn;
-    }
-
-    // --- GUI SETUP (Reverted button creation) ---
+    // METHOD TO SETUP THE GUI MANUALLY
     private void setupGUI() {
-
-        // --- FRAME ---
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        
+        // --- 1. Frame and Top-Level Panel Setup ---
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Calculator");
-        setLocation(new Point(500, 100));
+        setLocation(new java.awt.Point(500, 100));
         setUndecorated(true);
         setResizable(false);
-
+        
         app = new JPanel();
         app.setBackground(new Color(13, 12, 20));
-        app.setLayout(new BorderLayout());
-
-        // --- TITLE BAR ---
+        app.setLayout(new BorderLayout()); // Use BorderLayout for main structure
+        
+        // --- 2. Title Bar Setup ---
+        
         titleBar = new JPanel();
         titleBar.setBackground(new Color(21, 20, 22));
-        titleBar.setLayout(null);
-        titleBar.setPreferredSize(new Dimension(320, 30));
-
+        titleBar.setLayout(null); // Use null layout to precisely position close/mini buttons
+        titleBar.setPreferredSize(new java.awt.Dimension(320, 30));
+        
         title = new JLabel("Calculator");
         title.setFont(new Font("Century Gothic", Font.BOLD, 17));
         title.setForeground(Color.WHITE);
@@ -263,7 +246,7 @@ public final class Calculator extends JFrame {
         btnMini.setBackground(new Color(21, 20, 22));
         btnMini.setBorder(null);
         btnMini.setFocusPainted(false);
-        btnMini.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnMini.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         btnMini.setBounds(260, 0, 30, 30);
         titleBar.add(btnMini);
 
@@ -273,10 +256,11 @@ public final class Calculator extends JFrame {
         btnClose.setBackground(new Color(21, 20, 22));
         btnClose.setBorder(null);
         btnClose.setFocusPainted(false);
-        btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnClose.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         btnClose.setBounds(290, 0, 30, 30);
         titleBar.add(btnClose);
-
+        
+        // Add Mouse Listeners for Dragging (Inline implementation)
         titleBar.addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent evt) {
                 titleBarMouseDragged(evt);
@@ -287,15 +271,31 @@ public final class Calculator extends JFrame {
                 titleBarMousePressed(evt);
             }
         });
+        
+        // Add listeners for Mini/Close buttons (Inline implementation)
+        btnMini.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) { btnMiniMouseEntered(evt); }
+            public void mouseExited(java.awt.event.MouseEvent evt) { btnMiniMouseExited(evt); }
+        });
+        btnMini.addActionListener(new ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) { btnMiniActionPerformed(evt); }
+        });
+        
+        btnClose.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) { btnCloseMouseEntered(evt); }
+            public void mouseExited(java.awt.event.MouseEvent evt) { btnCloseMouseExited(evt); }
+        });
+        btnClose.addActionListener(new ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) { btnCloseActionPerformed(evt); }
+        });
 
-        btnMini.addActionListener(e -> setState(ICONIFIED));
-        btnClose.addActionListener(e -> System.exit(0));
 
-        // --- RESULTS PANEL ---
+        // --- 3. Results Panel Setup ---
+        
         resultsPanel = new JPanel();
-        resultsPanel.setLayout(new GridLayout(2, 1));
-        resultsPanel.setPreferredSize(new Dimension(320, 110));
-
+        resultsPanel.setLayout(new GridLayout(2, 1)); // Use 2 rows, 1 column
+        resultsPanel.setPreferredSize(new java.awt.Dimension(320, 110));
+        
         previous = new JTextField();
         previous.setEditable(false);
         previous.setBackground(new Color(21, 20, 22));
@@ -311,86 +311,170 @@ public final class Calculator extends JFrame {
         current.setForeground(Color.WHITE);
         current.setHorizontalAlignment(JTextField.RIGHT);
         current.setBorder(null);
-
+        
         resultsPanel.add(previous);
         resultsPanel.add(current);
+        
 
-        // --- BUTTONS PANEL ---
+        // --- 4. Buttons Panel Setup ---
+        
         buttonsPanel = new JPanel();
-        buttonsPanel.setLayout(new GridLayout(5, 4, 10, 10));
+        // GridLayout: 5 rows, 4 columns, 10px horizontal and vertical gap
+        buttonsPanel.setLayout(new GridLayout(5, 4, 10, 10)); 
         buttonsPanel.setBackground(new Color(21, 20, 22));
-        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Padding
 
-        // Colors for buttons
-        Color operatorColor = new Color(41, 39, 44);
-        Color numberColor = new Color(21, 20, 22);
-
-        // Create buttons using the helper method
-        btnDel = createButton("←", operatorColor);
-        btnClear = createButton("C", operatorColor);
-        btnDiv = createButton("÷", operatorColor);
-        btnMult = createButton("×", operatorColor);
-
-        btn7 = createButton("7", numberColor);
-        btn8 = createButton("8", numberColor);
-        btn9 = createButton("9", numberColor);
-        btnSub = createButton("-", operatorColor);
-
-        btn4 = createButton("4", numberColor);
-        btn5 = createButton("5", numberColor);
-        btn6 = createButton("6", numberColor);
-        btnPlus = createButton("+", operatorColor);
-
-        btn1 = createButton("1", numberColor);
-        btn2 = createButton("2", numberColor);
-        btn3 = createButton("3", numberColor);
-        btnPlusSub = createButton("+/-", numberColor);
-
-        btn0 = createButton("0", numberColor);
-        btnDot = createButton(".", numberColor);
-        btnEqual = createButton("=", operatorColor);
-
-        // Add buttons to panel
+        // Helper function to create standard number buttons
+        
+        // Initialize all buttons
+        btnDel = createButton("←", new Color(41, 39, 44));
+        btnClear = createButton("C", new Color(41, 39, 44));
+        btnDiv = createButton("÷", new Color(41, 39, 44));
+        btnMult = createButton("×", new Color(41, 39, 44));
+        
+        btn7 = createButton("7", new Color(21, 20, 22));
+        btn8 = createButton("8", new Color(21, 20, 22));
+        btn9 = createButton("9", new Color(21, 20, 22));
+        btnSub = createButton("-", new Color(41, 39, 44));
+        
+        btn4 = createButton("4", new Color(21, 20, 22));
+        btn5 = createButton("5", new Color(21, 20, 22));
+        btn6 = createButton("6", new Color(21, 20, 22));
+        btnPlus = createButton("+", new Color(41, 39, 44));
+        
+        btn1 = createButton("1", new Color(21, 20, 22));
+        btn2 = createButton("2", new Color(21, 20, 22));
+        btn3 = createButton("3", new Color(21, 20, 22));
+        // Placeholder for the row skip caused by the original double-height plus
+        btnPlusSub = createButton("+/-", new Color(21, 20, 22)); 
+        
+        btn0 = createButton("0", new Color(21, 20, 22));
+        btnDot = createButton(".", new Color(21, 20, 22));
+        btnEqual = createButton("=", new Color(41, 39, 44));
+        
+        // Add buttons in the correct grid order (top-to-bottom, left-to-right)
         buttonsPanel.add(btnDel);
         buttonsPanel.add(btnClear);
         buttonsPanel.add(btnDiv);
         buttonsPanel.add(btnMult);
+
         buttonsPanel.add(btn7);
         buttonsPanel.add(btn8);
         buttonsPanel.add(btn9);
         buttonsPanel.add(btnSub);
+
         buttonsPanel.add(btn4);
         buttonsPanel.add(btn5);
         buttonsPanel.add(btn6);
-        buttonsPanel.add(btnPlus);
+        buttonsPanel.add(btnPlus); // Now single height
+
         buttonsPanel.add(btn1);
         buttonsPanel.add(btn2);
         buttonsPanel.add(btn3);
         buttonsPanel.add(btnPlusSub);
+        
+        // Use a dummy panel or a custom layout to combine the last row elements,
+        // but for pure GridLayout simplicity, we'll put the remaining buttons:
         buttonsPanel.add(btn0);
         buttonsPanel.add(btnDot);
         buttonsPanel.add(btnEqual);
-        buttonsPanel.add(new JPanel() {
-            {
-                setOpaque(false);
-            }
-        }); // filler
+        // Add a filler component to keep the 4-column structure (optional)
+        buttonsPanel.add(new JPanel() {{ setOpaque(false); }}); 
 
-        // Assemble frame
+
+        // --- 5. Assemble the Frame ---
         app.add(titleBar, BorderLayout.NORTH);
         app.add(resultsPanel, BorderLayout.CENTER);
         app.add(buttonsPanel, BorderLayout.SOUTH);
+        
         getContentPane().add(app);
-
+        
+        // Pack and Display
         pack();
     }
+    
+    // HELPER METHOD for creating buttons with common properties
+    private JButton createButton(String text, Color bgColor) {
+        JButton btn = new JButton(text);
+        btn.setBackground(bgColor);
+        btn.setFont(new Font("Century Gothic", Font.BOLD, 18));
+        btn.setForeground(Color.WHITE);
+        btn.setBorder(BorderFactory.createLineBorder(new Color(41, 39, 44)));
+        btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btn.setFocusPainted(false);
+        return btn;
+    }
 
-    private void titleBarMousePressed(MouseEvent evt) {
+    // --- MOUSE LISTENERS (UNCHANGED) ---
+
+    private void btnCloseMouseEntered(java.awt.event.MouseEvent evt) {
+        btnClose.setBackground(new Color(255, 75, 75));
+        btnClose.setForeground(new Color(31, 30, 33));
+    }
+
+    private void btnCloseMouseExited(java.awt.event.MouseEvent evt) {
+        btnClose.setBackground(new Color(21, 20, 22));
+        btnClose.setForeground(Color.WHITE);
+    }
+
+    private void btnMiniMouseEntered(java.awt.event.MouseEvent evt) {
+        btnMini.setBackground(new Color(73, 69, 78));
+    }
+
+    private void btnMiniMouseExited(java.awt.event.MouseEvent evt) {
+        btnMini.setBackground(new Color(21, 20, 22));
+    }
+
+    private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {
+        System.exit(0);
+    }
+
+    private void btnMiniActionPerformed(java.awt.event.ActionEvent evt) {
+        setState(Calculator.ICONIFIED);
+    }
+
+    private void titleBarMousePressed(java.awt.event.MouseEvent evt) {
         x = evt.getX();
         y = evt.getY();
     }
 
-    private void titleBarMouseDragged(MouseEvent evt) {
-        setLocation(evt.getXOnScreen() - x, evt.getYOnScreen() - y);
+    private void titleBarMouseDragged(java.awt.event.MouseEvent evt) {
+        int xx = evt.getXOnScreen();
+        int yy = evt.getYOnScreen();
+        this.setLocation(xx - x, yy - y);
     }
+
+        // GUI COMPONENTS (Now declared as instance fields instead of static)
+    private javax.swing.JPanel app;
+    private javax.swing.JPanel resultsPanel;
+    private javax.swing.JTextField previous;
+    private javax.swing.JTextField current;
+    private javax.swing.JPanel buttonsPanel;
+    
+    // Buttons
+    private javax.swing.JButton btnDel;
+    private javax.swing.JButton btnClear;
+    private javax.swing.JButton btnDiv;
+    private javax.swing.JButton btnMult;
+    private javax.swing.JButton btn7;
+    private javax.swing.JButton btn8;
+    private javax.swing.JButton btn9;
+    private javax.swing.JButton btnSub;
+    private javax.swing.JButton btn4;
+    private javax.swing.JButton btn5;
+    private javax.swing.JButton btn6;
+    private javax.swing.JButton btnPlus;
+    private javax.swing.JButton btn1;
+    private javax.swing.JButton btn2;
+    private javax.swing.JButton btn3;
+    private javax.swing.JButton btnPlusSub;
+    private javax.swing.JButton btn0;
+    private javax.swing.JButton btnDot;
+    private javax.swing.JButton btnEqual;
+    
+    // Title Bar Components
+    private javax.swing.JPanel titleBar;
+    private javax.swing.JLabel title;
+    private javax.swing.JButton btnMini;
+    private javax.swing.JButton btnClose;
 }
