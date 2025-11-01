@@ -38,9 +38,13 @@ class DivideOperation implements Operation {
     }
 }
 
-// The Factory
-class OperationFactory {
-    /**
+public class Calculator {
+
+    private String currentOperand;
+    private String previousOperand;
+    private String operation;
+
+        /**
      * Factory Method to get a specific Operation object based on the symbol.
      * * @param op The string symbol for the operation ("+", "-", "×", "÷").
      * 
@@ -55,13 +59,6 @@ class OperationFactory {
             default -> null; // Return null or throw an exception for unknown operations
         };
     }
-}
-
-public class Calculator {
-
-    private String currentOperand;
-    private String previousOperand;
-    private String operation;
 
     public Calculator() {
         clear();
@@ -161,7 +158,7 @@ public class Calculator {
             return;
         }
         // Factory Method Pattern: Get the appropriate Operation object
-        Operation op = OperationFactory.getOperation(this.operation);
+        Operation op = Calculator.getOperation(this.operation);
 
         if (op == null) {
             // Handle case where the operation symbol is not recognized
