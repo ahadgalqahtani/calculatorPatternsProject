@@ -13,6 +13,9 @@ public final class CalculatorGUI extends javax.swing.JFrame {
     // --- SINGLETON & LOGIC INSTANCE ---
     private static CalculatorGUI instance = null;
     private final Calculator logic; // Instance of the core logic class
+    
+    // --- ADAPTEE INSTANCE ---
+    private final CalculatorApp calculatorAppAdaptee; // The full calculator JFrame, used for its logic methods
 
     // --- GUI DRAGGING FIELDS ---
     private int x, y;
@@ -28,6 +31,11 @@ public final class CalculatorGUI extends javax.swing.JFrame {
     private javax.swing.JButton btnDel, btnClear, btnDiv, btnMult, btn7, btn8, btn9, btnSub,
             btn4, btn5, btn6, btnPlus, btn1, btn2, btn3, btnPlusSub, btn0, btnDot, btnEqual;
     
+    // NEW ADAPTER BUTTONS
+    private javax.swing.JButton btnSqrt; 
+    private javax.swing.JButton btnSin; // New
+    private javax.swing.JButton btnCos; // New
+    
     // Title Bar Components
     private javax.swing.JPanel titleBar;
     private javax.swing.JLabel title;
@@ -36,9 +44,16 @@ public final class CalculatorGUI extends javax.swing.JFrame {
 
     // --- CONSTRUCTOR (Singleton) ---
     private CalculatorGUI() {
-        this.logic = new Calculator(); // Initialize the core logic
+        // 1. Initialize Adaptee and Logic (Dependency Injection)
+        this.calculatorAppAdaptee = new CalculatorApp();
+        // Pass the Adaptee instance to the Calculator, allowing it to use the Sqrt, Sin, and Cos Adapters
+        this.logic = new Calculator(calculatorAppAdaptee); 
+        
+        // Hide the original CalculatorApp frame since we only need its logic
+        this.calculatorAppAdaptee.setVisible(false);
+
         setupGUI();
-        getContentPane().setSize(320, 530);
+        getContentPane().setSize(320, 580); // Increased size to accommodate the new row
         this.logic.clear();
         this.updateDisplay(); // Display initial cleared state
         this.addEvents();
@@ -60,7 +75,7 @@ public final class CalculatorGUI extends javax.swing.JFrame {
             btn0, btn1, btn2, btn3, btn4,
             btn5, btn6, btn7, btn8, btn9,
             btnDiv, btnDot, btnEqual, btnDel,
-            btnMult, btnPlus, btnPlusSub, btnSub, btnClear
+            btnMult, btnPlus, btnPlusSub, btnSub, btnClear, btnSqrt, btnSin, btnCos // Added btnSin and btnCos
         };
 
         JButton[] numbers = {
@@ -87,7 +102,8 @@ public final class CalculatorGUI extends javax.swing.JFrame {
                 @Override
                 public void mouseExited(MouseEvent e) {
                     Object b = e.getSource();
-                    if (b == btnDiv || b == btnEqual || b == btnDel || b == btnMult || b == btnSub || b == btnPlus || b == btnClear) {
+                    // Keep background logic for function buttons (now includes sin, cos)
+                    if (b == btnDiv || b == btnEqual || b == btnDel || b == btnMult || b == btnSub || b == btnPlus || b == btnClear || b == btnSqrt || b == btnSin || b == btnCos) {
                         ((JButton) b).setBackground(new Color(41, 39, 44));
                     } else {
                         ((JButton) b).setBackground(new Color(21, 20, 22));
@@ -134,12 +150,28 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         });
 
         btnEqual.addActionListener((ActionEvent evt) -> {
-            logic.compute();
+            logic.computeBinary(); 
             updateDisplay();
         });
 
         btnPlusSub.addActionListener((ActionEvent evt) -> {
             logic.toggleSign();
+            updateDisplay();
+        });
+        
+        // --- Unary Operation Handlers (using the Adapters) ---
+        btnSqrt.addActionListener((ActionEvent evt) -> {
+            logic.computeUnary("√"); 
+            updateDisplay();
+        });
+        
+        btnSin.addActionListener((ActionEvent evt) -> {
+            logic.computeUnary("sin"); 
+            updateDisplay();
+        });
+        
+        btnCos.addActionListener((ActionEvent evt) -> {
+            logic.computeUnary("cos"); 
             updateDisplay();
         });
     }
@@ -168,7 +200,7 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         app.setBackground(new Color(13, 12, 20));
         app.setLayout(new BorderLayout());
         
-        // --- 2. Title Bar Setup ---
+        // --- 2. Title Bar Setup (No change needed here) ---
         
         titleBar = new JPanel();
         titleBar.setBackground(new Color(21, 20, 22));
@@ -231,7 +263,7 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         });
 
 
-        // --- 3. Results Panel Setup ---
+        // --- 3. Results Panel Setup (No change needed here) ---
         
         resultsPanel = new JPanel();
         resultsPanel.setLayout(new GridLayout(2, 1));
@@ -259,8 +291,9 @@ public final class CalculatorGUI extends javax.swing.JFrame {
 
         // --- 4. Buttons Panel Setup ---
         
+        // CHANGED TO 6 ROWS to accommodate sin and cos
         buttonsPanel = new JPanel();
-        buttonsPanel.setLayout(new GridLayout(5, 4, 10, 10)); 
+        buttonsPanel.setLayout(new GridLayout(6, 4, 10, 10)); 
         buttonsPanel.setBackground(new Color(21, 20, 22));
         buttonsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -289,32 +322,48 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         btnDot = createButton(".", new Color(21, 20, 22));
         btnEqual = createButton("=", new Color(41, 39, 44));
         
-        // Add buttons in the correct grid order
+        // Initialize NEW Unary Function buttons
+        btnSqrt = createButton("√", new Color(41, 39, 44));
+        btnSin = createButton("sin", new Color(41, 39, 44));
+        btnCos = createButton("cos", new Color(41, 39, 44));
+
+        // Add buttons in the new 6x4 grid order
+        
+        // Row 1: New functions
+        buttonsPanel.add(btnSin);
+        buttonsPanel.add(btnCos);
+        buttonsPanel.add(new JPanel() {{ setOpaque(false); }}); // Placeholder
+        buttonsPanel.add(new JPanel() {{ setOpaque(false); }}); // Placeholder
+        
+        // Row 2: Standard functions
         buttonsPanel.add(btnDel);
         buttonsPanel.add(btnClear);
         buttonsPanel.add(btnDiv);
         buttonsPanel.add(btnMult);
 
+        // Row 3: Numbers 7-9
         buttonsPanel.add(btn7);
         buttonsPanel.add(btn8);
         buttonsPanel.add(btn9);
         buttonsPanel.add(btnSub);
 
+        // Row 4: Numbers 4-6
         buttonsPanel.add(btn4);
         buttonsPanel.add(btn5);
         buttonsPanel.add(btn6);
         buttonsPanel.add(btnPlus);
 
+        // Row 5: Numbers 1-3
         buttonsPanel.add(btn1);
         buttonsPanel.add(btn2);
         buttonsPanel.add(btn3);
         buttonsPanel.add(btnPlusSub);
         
+        // Row 6: Bottom row
         buttonsPanel.add(btn0);
         buttonsPanel.add(btnDot);
         buttonsPanel.add(btnEqual);
-        // Filler component to complete the grid
-        buttonsPanel.add(new JPanel() {{ setOpaque(false); }}); 
+        buttonsPanel.add(btnSqrt);
 
 
         // --- 5. Assemble the Frame ---

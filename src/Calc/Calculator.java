@@ -1,67 +1,39 @@
 package Calc;
 
-// Product Interface
-interface Operation {
-    float compute(float a, float b);
-}
+import java.math.BigDecimal;
 
-// Concrete Products
-
-class AddOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a + b;
-    }
-}
-
-class SubtractOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a - b;
-    }
-}
-
-class MultiplyOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        return a * b;
-    }
-}
-
-class DivideOperation implements Operation {
-    @Override
-    public float compute(float a, float b) {
-        // Exception handling is essential here
-        if (b == 0)
-            throw new ArithmeticException("Division by zero");
-        return a / b;
-    }
-}
+// --- Client Context (Calculator Core Logic) ---
 
 public class Calculator {
-
     private String currentOperand;
     private String previousOperand;
     private String operation;
 
-        /**
-     * Factory Method to get a specific Operation object based on the symbol.
-     * * @param op The string symbol for the operation ("+", "-", "×", "÷").
-     * 
-     * @return A concrete implementation of the Operation interface.
+    // Dependency on the Adaptee (CalculatorApp instance)
+    private final CalculatorApp adaptee;
+
+    /**
+     * Constructor now takes the CalculatorApp instance to manage dependencies for adapters.
      */
-    public static Operation getOperation(String op) {
+    public Calculator(CalculatorApp app) {
+        this.adaptee = app;
+        clear();
+    }
+
+    /**
+     * Factory Method to get a specific Operation object.
+     * Uses the stored adaptee instance for adapter creation.
+     */
+    public Operation getOperation(String op) {
         return switch (op) {
             case "+" -> new AddOperation();
             case "-" -> new SubtractOperation();
             case "×" -> new MultiplyOperation();
             case "÷" -> new DivideOperation();
+            // Adapter cases: Use the single UniversalUnaryAdapter
+            case "√", "sin", "cos" -> new UniversalUnaryAdapter(this.adaptee, op); 
             default -> null; // Return null or throw an exception for unknown operations
         };
-    }
-
-    public Calculator() {
-        clear();
     }
 
     // --- State Accessors ---
@@ -130,7 +102,7 @@ public class Calculator {
         }
 
         if (!this.previousOperand.equals("")) {
-            this.compute();
+            this.computeBinary();
         }
 
         this.operation = newOperation;
@@ -138,7 +110,10 @@ public class Calculator {
         this.currentOperand = "";
     }
 
-    public void compute() {
+    /**
+     * Handles binary operations (+, -, *, /) using the Operation interface's float compute(float, float) method.
+     */
+    public void computeBinary() {
         // Validation: Ensure both operands are present
         if (this.currentOperand.equals("") || this.previousOperand.equals("")) {
             return;
@@ -152,21 +127,18 @@ public class Calculator {
             curr = Float.parseFloat(this.currentOperand);
             prev = Float.parseFloat(this.previousOperand);
         } catch (NumberFormatException e) {
-            // Handle case where conversion fails
             clear();
             this.currentOperand = "Error";
             return;
         }
         // Factory Method Pattern: Get the appropriate Operation object
-        Operation op = Calculator.getOperation(this.operation);
+        Operation op = this.getOperation(this.operation);
 
         if (op == null) {
-            // Handle case where the operation symbol is not recognized
             return;
         }
 
         try {
-            // Call the generic compute method on the interface object
             float result = op.compute(prev, curr);
 
             // Update State: Set the result and clear the history
@@ -175,13 +147,46 @@ public class Calculator {
             this.operation = "";
 
         } catch (ArithmeticException e) {
-            // Handle Division by Zero error thrown by DivideOperation
             clear();
             this.currentOperand = "Error";
         }
     }
 
+public void computeUnary(String unaryOperation) {
+        if (this.currentOperand.isBlank()) {
+            return;
+        }
+
+        BigDecimal curr;
+        
+        try {
+            curr = new BigDecimal(this.currentOperand);
+        } catch (NumberFormatException e) {
+            clear();
+            this.currentOperand = "Error";
+            return;
+        }
+
+        Operation op = this.getOperation(unaryOperation);
+
+        if (op == null) {
+            return;
+        }
+
+        try {
+            // The UniversalUnaryAdapter handles the operation based on its stored opType
+            BigDecimal result = op.compute(curr); 
+            
+            this.currentOperand = result.toPlainString(); 
+            this.previousOperand = "";
+            this.operation = "";
+        } catch (UnsupportedOperationException e) {
+            // This case handles if a binary operation was mistakenly called as unary.
+        }
+    }
+
     private String formatResult(float value) {
+        // Simplification for float display
         return (value - (int) value) != 0 ? Float.toString(value) : Integer.toString((int) value);
     }
 }
