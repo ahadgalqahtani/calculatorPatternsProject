@@ -7,15 +7,15 @@ import java.awt.GridLayout;
 import java.awt.BorderLayout;
 import java.awt.Font;
 
-// Renamed from Calculator to CalculatorGUI to reflect its UI/Controller role
 public final class CalculatorGUI extends javax.swing.JFrame {
 
-    // --- SINGLETON & LOGIC INSTANCE ---
+    // --- SINGLETON, LOGIC & FACADE INSTANCES ---
     private static CalculatorGUI instance = null;
-    private final Calculator logic; // Instance of the core logic class
+    private final Calculator logic; // Core logic instance
+    private final CalculatorFacade calculatorFacade; // FACADE INSTANCE
     
     // --- ADAPTEE INSTANCE ---
-    private final CalculatorApp calculatorAppAdaptee; // The full calculator JFrame, used for its logic methods
+    private final CalculatorApp calculatorAppAdaptee; 
 
     // --- GUI DRAGGING FIELDS ---
     private int x, y;
@@ -33,8 +33,8 @@ public final class CalculatorGUI extends javax.swing.JFrame {
     
     // NEW ADAPTER BUTTONS
     private javax.swing.JButton btnSqrt; 
-    private javax.swing.JButton btnSin; // New
-    private javax.swing.JButton btnCos; // New
+    private javax.swing.JButton btnSin; 
+    private javax.swing.JButton btnCos; 
     
     // Title Bar Components
     private javax.swing.JPanel titleBar;
@@ -44,18 +44,20 @@ public final class CalculatorGUI extends javax.swing.JFrame {
 
     // --- CONSTRUCTOR (Singleton) ---
     private CalculatorGUI() {
-        // 1. Initialize Adaptee and Logic (Dependency Injection)
+        // 1. Initialize Adaptee and Core Logic
         this.calculatorAppAdaptee = new CalculatorApp();
-        // Pass the Adaptee instance to the Calculator, allowing it to use the Sqrt, Sin, and Cos Adapters
         this.logic = new Calculator(calculatorAppAdaptee); 
+        
+        // 2. Initialize the Facade, passing the core logic dependency
+        this.calculatorFacade = new CalculatorFacade(this.logic); // <--- FACADE INITIALIZED
         
         // Hide the original CalculatorApp frame since we only need its logic
         this.calculatorAppAdaptee.setVisible(false);
 
         setupGUI();
-        getContentPane().setSize(320, 580); // Increased size to accommodate the new row
-        this.logic.clear();
-        this.updateDisplay(); // Display initial cleared state
+        getContentPane().setSize(320, 580); 
+        this.calculatorFacade.handleClear(); // <--- USING FACADE
+        this.updateDisplay();
         this.addEvents();
     }
 
@@ -67,15 +69,14 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         return instance;
     }
 
-    // --- VIEW/CONTROLLER LOGIC ---
+    // --- VIEW/CONTROLLER LOGIC (communicate with calculator through Facade)---
 
     public void addEvents() {
-        // Now using instance variables (btn0, btn1, etc.)
         JButton[] btns = {
             btn0, btn1, btn2, btn3, btn4,
             btn5, btn6, btn7, btn8, btn9,
             btnDiv, btnDot, btnEqual, btnDel,
-            btnMult, btnPlus, btnPlusSub, btnSub, btnClear, btnSqrt, btnSin, btnCos // Added btnSin and btnCos
+            btnMult, btnPlus, btnPlusSub, btnSub, btnClear, btnSqrt, btnSin, btnCos
         };
 
         JButton[] numbers = {
@@ -83,15 +84,15 @@ public final class CalculatorGUI extends javax.swing.JFrame {
             btn5, btn6, btn7, btn8, btn9
         };
 
-        // Number button event handler (Delegates to logic)
+        // Number button event handler (Delegates to Facade)
         for (JButton number : numbers) {
             number.addActionListener((ActionEvent e) -> {
-                logic.appendNumber(((JButton) e.getSource()).getText());
+                calculatorFacade.handleNumberOrDot(((JButton) e.getSource()).getText()); // <--- FACADE
                 updateDisplay();
             });
         }
 
-        // Mouse hover event handlers (UI only)
+        // Mouse hover event handlers (UI only - no change)
         for (JButton btn : btns) {
             btn.addMouseListener(new MouseAdapter() {
                 @Override
@@ -102,7 +103,7 @@ public final class CalculatorGUI extends javax.swing.JFrame {
                 @Override
                 public void mouseExited(MouseEvent e) {
                     Object b = e.getSource();
-                    // Keep background logic for function buttons (now includes sin, cos)
+                    // Keep background logic for function buttons
                     if (b == btnDiv || b == btnEqual || b == btnDel || b == btnMult || b == btnSub || b == btnPlus || b == btnClear || b == btnSqrt || b == btnSin || b == btnCos) {
                         ((JButton) b).setBackground(new Color(41, 39, 44));
                     } else {
@@ -112,77 +113,77 @@ public final class CalculatorGUI extends javax.swing.JFrame {
             });
         }
         
-        // --- Functional Button Event Handlers (Delegates to logic) ---
+        // --- Functional Button Event Handlers (Delegates to Facade) ---
         
         btnDot.addActionListener((ActionEvent evt) -> {
-            logic.appendNumber(".");
+            calculatorFacade.handleNumberOrDot(".");
             updateDisplay();
         });
 
         btnClear.addActionListener((ActionEvent evt) -> {
-            logic.clear();
+            calculatorFacade.handleClear();
             updateDisplay();
         });
 
         btnDel.addActionListener((ActionEvent evt) -> {
-            logic.deleteLastDigit();
+            calculatorFacade.handleDelete();
             updateDisplay();
         });
 
         btnPlus.addActionListener((ActionEvent evt) -> {
-            logic.chooseOperation("+");
+            calculatorFacade.handleOperation("+");
             updateDisplay();
         });
 
         btnMult.addActionListener((ActionEvent evt) -> {
-            logic.chooseOperation("×");
+            calculatorFacade.handleOperation("×"); 
             updateDisplay();
         });
 
         btnSub.addActionListener((ActionEvent evt) -> {
-            logic.chooseOperation("-");
+            calculatorFacade.handleOperation("-"); 
             updateDisplay();
         });
 
         btnDiv.addActionListener((ActionEvent evt) -> {
-            logic.chooseOperation("÷");
+            calculatorFacade.handleOperation("÷");
             updateDisplay();
         });
 
         btnEqual.addActionListener((ActionEvent evt) -> {
-            logic.computeBinary(); 
+            calculatorFacade.handleEquals(); 
             updateDisplay();
         });
 
         btnPlusSub.addActionListener((ActionEvent evt) -> {
-            logic.toggleSign();
+            calculatorFacade.handleToggleSign();
             updateDisplay();
         });
         
-        // --- Unary Operation Handlers (using the Adapters) ---
+        // --- Unary Operation Handlers (Delegates to Facade) ---
         btnSqrt.addActionListener((ActionEvent evt) -> {
-            logic.computeUnary("√"); 
+            calculatorFacade.handleSqrt();
             updateDisplay();
         });
         
         btnSin.addActionListener((ActionEvent evt) -> {
-            logic.computeUnary("sin"); 
+            calculatorFacade.handleSin();
             updateDisplay();
         });
         
         btnCos.addActionListener((ActionEvent evt) -> {
-            logic.computeUnary("cos"); 
+            calculatorFacade.handleCos();
             updateDisplay();
         });
     }
 
     /**
-     * Updates the text fields using data retrieved from the Calculator instance.
+     * Updates the text fields using data retrieved from the CalculatorFacade.
      * This is the only link between the logic (Model) and the display (View).
      */
     public void updateDisplay() {
-        current.setText(logic.getCurrentOperand());
-        previous.setText(logic.getPreviousOperandDisplay());
+        current.setText(calculatorFacade.getCurrentDisplay());
+        previous.setText(calculatorFacade.getPreviousDisplay());
     }
 
     // --- GUI SETUP METHODS (View) ---
@@ -200,7 +201,7 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         app.setBackground(new Color(13, 12, 20));
         app.setLayout(new BorderLayout());
         
-        // --- 2. Title Bar Setup (No change needed here) ---
+        // --- 2. Title Bar Setup ---
         
         titleBar = new JPanel();
         titleBar.setBackground(new Color(21, 20, 22));
@@ -235,17 +236,13 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         
         // Mouse Listeners for Dragging
         titleBar.addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent evt) {
-                titleBarMouseDragged(evt);
-            }
+            public void mouseDragged(MouseEvent evt) { titleBarMouseDragged(evt); }
         });
         titleBar.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent evt) {
-                titleBarMousePressed(evt);
-            }
+            public void mousePressed(MouseEvent evt) { titleBarMousePressed(evt); }
         });
         
-        // Listeners for Mini/Close buttons
+        // Listeners for Mini/Close buttons 
         btnMini.addMouseListener(new MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) { btnMiniMouseEntered(evt); }
             public void mouseExited(java.awt.event.MouseEvent evt) { btnMiniMouseExited(evt); }
@@ -263,7 +260,7 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         });
 
 
-        // --- 3. Results Panel Setup (No change needed here) ---
+        // --- 3. Results Panel Setup ---
         
         resultsPanel = new JPanel();
         resultsPanel.setLayout(new GridLayout(2, 1));
@@ -291,7 +288,6 @@ public final class CalculatorGUI extends javax.swing.JFrame {
 
         // --- 4. Buttons Panel Setup ---
         
-        // CHANGED TO 6 ROWS to accommodate sin and cos
         buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new GridLayout(6, 4, 10, 10)); 
         buttonsPanel.setBackground(new Color(21, 20, 22));
@@ -322,18 +318,18 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         btnDot = createButton(".", new Color(21, 20, 22));
         btnEqual = createButton("=", new Color(41, 39, 44));
         
-        // Initialize NEW Unary Function buttons
+        // Initialize Unary Function buttons
         btnSqrt = createButton("√", new Color(41, 39, 44));
         btnSin = createButton("sin", new Color(41, 39, 44));
         btnCos = createButton("cos", new Color(41, 39, 44));
 
-        // Add buttons in the new 6x4 grid order
+        // Add buttons in the 6x4 grid order
         
         // Row 1: New functions
         buttonsPanel.add(btnSin);
         buttonsPanel.add(btnCos);
-        buttonsPanel.add(new JPanel() {{ setOpaque(false); }}); // Placeholder
-        buttonsPanel.add(new JPanel() {{ setOpaque(false); }}); // Placeholder
+        buttonsPanel.add(new JPanel() {{ setOpaque(false); }}); 
+        buttonsPanel.add(new JPanel() {{ setOpaque(false); }}); 
         
         // Row 2: Standard functions
         buttonsPanel.add(btnDel);
@@ -376,7 +372,7 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         pack();
     }
     
-    // HELPER METHOD for creating buttons with common properties
+    // HELPER METHOD for creating buttons with common properties (unchanged)
     private JButton createButton(String text, Color bgColor) {
         JButton btn = new JButton(text);
         btn.setBackground(bgColor);
@@ -388,7 +384,7 @@ public final class CalculatorGUI extends javax.swing.JFrame {
         return btn;
     }
 
-    // --- MOUSE LISTENERS (UI Actions) ---
+    // --- MOUSE LISTENERS (UI Actions - unchanged) ---
 
     private void btnCloseMouseEntered(java.awt.event.MouseEvent evt) {
         btnClose.setBackground(new Color(255, 75, 75));
