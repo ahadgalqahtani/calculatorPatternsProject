@@ -1,53 +1,85 @@
 package Calc;
+// CalculatorFacade.java (Revised)
 
 public class CalculatorFacade {
-    // Reference to the complex subsystem
+    // Reference to the complex subsystem (The Receiver)
     private final Calculator logic;
+
+    // Optional: History stack for Undo/Redo feature
+    // private final Stack<ICalculatorCommand> history = new Stack<>();
 
     public CalculatorFacade(Calculator logic) {
         this.logic = logic;
     }
 
-    // --- Facade Methods corresponding to button actions ---
+    /**
+     * Helper method to execute and optionally record the command.
+     */
+    private void executeAndRecord(CalculatorCommand command) {
+        command.execute();
+        // history.push(command); // Uncomment this line to enable Undo/Redo tracking
+    }
+
+    // --- Facade Methods using the Command Pattern ---
+
+    // Handles digits (0-9) and the decimal dot
     public void handleNumberOrDot(String input) {
-        logic.appendNumber(input);
+        CalculatorCommand command = new AppendNumberCommand(logic, input);
+        executeAndRecord(command);
     }
-    
+
+    // Handles binary operators (+, -, ×, ÷)
     public void handleOperation(String op) {
-        logic.chooseOperation(op);
+        CalculatorCommand command = new ChooseOperationCommand(logic, op);
+        executeAndRecord(command);
     }
 
+    // Handles the equals button (=)
     public void handleEquals() {
-        logic.computeBinary();
-    }
-    
-    public void handleClear() {
-        logic.clear();
-    }
-    
-    public void handleDelete() {
-        logic.deleteLastDigit();
-    }
-    
-    public void handleToggleSign() {
-        logic.toggleSign();
+        CalculatorCommand command = new ComputeBinaryCommand(logic);
+        executeAndRecord(command);
     }
 
-    // Unary functions handlers
+    // Handles the clear button (C)
+    public void handleClear() {
+        CalculatorCommand command = new ClearCommand(logic);
+        executeAndRecord(command);
+    }
+
+    // Handles the delete button (←)
+    public void handleDelete() {
+        CalculatorCommand command = new DeleteCommand(logic);
+        executeAndRecord(command);
+    }
+
+    // Handles the sign toggle (+/-)
+    public void handleToggleSign() {
+        CalculatorCommand command = new ToggleSignCommand(logic);
+        executeAndRecord(command);
+    }
+
+    // Handles Unary functions (√, sin, cos)
+    // The single handleUnary method is now used internally by the specific GUI
+    // handlers
+    private void handleUnary(String unaryOp) {
+        CalculatorCommand command = new ComputeUnaryCommand(logic, unaryOp);
+        executeAndRecord(command);
+    }
+
+    // ... Simplified handlers for your existing methods
     public void handleSqrt() {
-        logic.computeUnary("√");
+        handleUnary("√");
     }
 
     public void handleSin() {
-        logic.computeUnary("sin");
+        handleUnary("sin");
     }
 
     public void handleCos() {
-        logic.computeUnary("cos");
+        handleUnary("cos");
     }
 
-    // Display Getters 
-
+    // Display Getters (These do not change state, so they don't need Commands)
     public String getCurrentDisplay() {
         return logic.getCurrentOperand();
     }
