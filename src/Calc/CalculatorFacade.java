@@ -5,15 +5,12 @@ public class CalculatorFacade {
     // Reference to the complex subsystem (The Receiver)
     private final Calculator logic;
 
-    // Optional: History stack for Undo/Redo feature
-    // private final Stack<ICalculatorCommand> history = new Stack<>();
-
     public CalculatorFacade(Calculator logic) {
         this.logic = logic;
     }
 
     /**
-     * Helper method to execute and optionally record the command.
+     * Helper method to execute the command.
      */
     private void executeAndRecord(CalculatorCommand command) {
         command.execute();
