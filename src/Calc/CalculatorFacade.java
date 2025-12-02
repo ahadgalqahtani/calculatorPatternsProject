@@ -17,7 +17,6 @@ public class CalculatorFacade {
      */
     private void executeAndRecord(CalculatorCommand command) {
         command.execute();
-        // history.push(command); // Uncomment this line to enable Undo/Redo tracking
     }
 
     // --- Facade Methods using the Command Pattern ---
@@ -59,8 +58,6 @@ public class CalculatorFacade {
     }
 
     // Handles Unary functions (√, sin, cos)
-    // The single handleUnary method is now used internally by the specific GUI
-    // handlers
     private void handleUnary(String unaryOp) {
         CalculatorCommand command = new ComputeUnaryCommand(logic, unaryOp);
         executeAndRecord(command);
